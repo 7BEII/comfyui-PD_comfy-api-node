@@ -17,7 +17,7 @@
 
 ```bash
 cd ComfyUI/custom_nodes
-git clone https://github.com/your-username/comfyui-PD_comfy-api-node.git
+git clone https://github.com/7BEII/comfyui-PD_comfy-api-node.git
 cd comfyui-PD_comfy-api-node
 ```
 
@@ -204,4 +204,3 @@ pip install -r requirements.txt
 ---
 
 **注意**：本项目为 ComfyUI 自定义节点，需要配合 ComfyUI 使用。确保您已正确安装 ComfyUI 环境。
-
