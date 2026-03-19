@@ -93,6 +93,7 @@ class PDGeminiProImageGenAPIKey:
                 "images": ("IMAGE", {
                     "tooltip": "Optional reference image(s) (up to 14)"
                 }),
+                "files": ("GEMINI_INPUT_FILES", ),
                 "system_prompt": ("STRING", {
                     "multiline": True,
                     "default": GEMINI_IMAGE_SYS_PROMPT,
@@ -109,7 +110,7 @@ class PDGeminiProImageGenAPIKey:
     FUNCTION = "generate_image"
     CATEGORY = "PD_Tools/Image_Generation"
 
-    def generate_image(self, api_key, prompt, model, aspect_ratio, resolution, response_modalities, seed, unique_id, images=None, system_prompt=""):
+    def generate_image(self, api_key, prompt, model, aspect_ratio, resolution, response_modalities, seed, unique_id, images=None, files=None, system_prompt=""):
         """生成图片"""
         
         # 验证 API Key
@@ -145,6 +146,15 @@ class PDGeminiProImageGenAPIKey:
             
             if images.shape[0] > 14:
                 print(f"[GEMINI_PRO_APIKEY] Warning: Only first 14 images will be used (provided {images.shape[0]})")
+
+        # Files 输入处理
+        if files:
+            for file_part in files:
+                if hasattr(file_part, "model_dump"):
+                    parts.append(file_part.model_dump(exclude_none=True))
+                else:
+                    parts.append(file_part)
+                print(f"[GEMINI_PRO_APIKEY] Added file part")
 
         # 生成配置
         generation_config = {
@@ -290,5 +300,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PDGeminiProImageGenAPIKey": "PD: Gemini Pro Image (apikey)"
+    "PDGeminiProImageGenAPIKey": "PD: Gemini Pro Image (ComfyUI Key)"
 }

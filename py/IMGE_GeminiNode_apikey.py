@@ -88,9 +88,10 @@ class PDGeminiImageGenAPIKey:
                 }),
             },
             "optional": {
-                "image_ref": ("IMAGE", {
+                "images": ("IMAGE", {
                     "tooltip": "Reference image(s) for image-to-image generation"
                 }),
+                "files": ("GEMINI_INPUT_FILES", ),
                 "system_prompt": ("STRING", {
                     "multiline": True,
                     "default": GEMINI_IMAGE_SYS_PROMPT,
@@ -107,7 +108,7 @@ class PDGeminiImageGenAPIKey:
     FUNCTION = "generate_image"
     CATEGORY = "PD_Tools/Image_Generation"
 
-    def generate_image(self, api_key, prompt, model, aspect_ratio, response_modalities, seed, unique_id, image_ref=None, system_prompt=""):
+    def generate_image(self, api_key, prompt, model, aspect_ratio, response_modalities, seed, unique_id, images=None, files=None, system_prompt=""):
         """生成图片"""
         
         # 验证 API Key
@@ -129,9 +130,9 @@ class PDGeminiImageGenAPIKey:
         parts.append({"text": prompt})
         
         # 添加参考图片（如果有）
-        if image_ref is not None:
-            for i in range(image_ref.shape[0]):
-                b64_str = tensor_to_base64(image_ref[i])
+        if images is not None:
+            for i in range(images.shape[0]):
+                b64_str = tensor_to_base64(images[i])
                 parts.append({
                     "inlineData": {
                         "mimeType": "image/png",
@@ -139,6 +140,15 @@ class PDGeminiImageGenAPIKey:
                     }
                 })
                 print(f"[GEMINI_APIKEY] Added reference image {i+1}")
+
+        # Files 输入处理
+        if files:
+            for file_part in files:
+                if hasattr(file_part, "model_dump"):
+                    parts.append(file_part.model_dump(exclude_none=True))
+                else:
+                    parts.append(file_part)
+                print(f"[GEMINI_APIKEY] Added file part")
 
         # 生成配置
         generation_config = {
@@ -280,5 +290,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PDGeminiImageGenAPIKey": "PD: Gemini Image (apikey)"
+    "PDGeminiImageGenAPIKey": "PD: Gemini Image (ComfyUI Key)"
 }
