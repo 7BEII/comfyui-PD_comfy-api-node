@@ -51,8 +51,8 @@ pip install -r comfyui-PD_comfy-api-node/requirements.txt
 #### PD: GPT Image 2 (comfyui_apikey)
 - 支持输入多图参考
 - 支持单图输入，GPT image2 节点comfyui 格式。
-![[Pasted image 20260422192905.png]]
-![[Pasted image 20260422192828.png]]
+![GPT Image 2 示例 1](image/Pasted%20image%2020260422192905.png)
+![GPT Image 2 示例 2](image/Pasted%20image%2020260422192828.png)
 #### PD: Gemini Image (ComfyUI Key)
 ![alt text](image.png)
 
