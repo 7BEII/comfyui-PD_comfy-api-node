@@ -8,16 +8,19 @@ import requests
 import torch
 
 from ._image_gpt_common import (
+    build_openai_edit_files,
+    calculate_exact_cost_gpt_image_2_from_usage,
     GPT_IMAGE_2_PRESET_SIZES,
     calculate_token_price_2,
     decode_response_images,
     empty_image,
     estimate_price_range_2,
+    format_credits_value,
     format_rmb_range,
     format_rmb_value,
     mask_to_png_bytes,
+    post_with_retries,
     resolve_gpt_image_2_size,
-    tensor_to_bytes,
     validate_gpt_image_2_size,
 )
 
@@ -116,11 +119,7 @@ class PDOpenAIGPTImage2AuthToken:
         try:
             if is_edit_mode:
                 url = f"{base_url}/proxy/openai/images/edits"
-                files = {
-                    "image": ("image.png", tensor_to_bytes(image), "image/png")
-                }
-                if mask is not None:
-                    files["mask"] = ("mask.png", mask_to_png_bytes(mask), "image/png")
+                files = build_openai_edit_files(image, mask)
 
                 data = {
                     "model": model,
@@ -133,9 +132,10 @@ class PDOpenAIGPTImage2AuthToken:
                 }
                 headers = {
                     "Authorization": f"Bearer {auth_token}",
+                    "Connection": "close",
                     "User-Agent": "ComfyUI-PD-Node/2.1"
                 }
-                response = requests.post(url, headers=headers, files=files, data=data, timeout=300)
+                response = post_with_retries(url, headers, data=data, files=files, timeout=300)
             else:
                 url = f"{base_url}/proxy/openai/images/generations"
                 payload = {
@@ -150,9 +150,10 @@ class PDOpenAIGPTImage2AuthToken:
                 headers = {
                     "Authorization": f"Bearer {auth_token}",
                     "Content-Type": "application/json",
+                    "Connection": "close",
                     "User-Agent": "ComfyUI-PD-Node/2.1"
                 }
-                response = requests.post(url, headers=headers, json=payload, timeout=300)
+                response = post_with_retries(url, headers, json_payload=payload, timeout=300)
 
             if response.status_code != 200:
                 error_msg = f"API Error {response.status_code}: {response.text[:200]}"
@@ -171,23 +172,39 @@ class PDOpenAIGPTImage2AuthToken:
             min_cost, max_cost = estimate_price_range_2(quality, num_images)
             token_cost = calculate_token_price_2(num_images)
             size_note = resolve_gpt_image_2_size(size, custom_width, custom_height)
+            exact_cost = calculate_exact_cost_gpt_image_2_from_usage(result)
 
-            info_str = (
-                f"模型: {model}\n"
-                f"显示名称: OpenAI GPT Image 2\n"
-                f"模式: {'编辑' if is_edit_mode else '生成'}\n"
-                f"状态: 成功\n"
-                f"耗时: {duration:.2f} 秒\n"
-                f"图片数量: {len(image_tensors)}\n"
-                f"尺寸预设: {size}\n"
-                f"实际尺寸: {size_note}\n"
-                f"质量: {quality}\n"
-                f"背景: {background}\n"
-                f"预估价格区间(USD): ~${min_cost:.3f}-${max_cost:.3f}\n"
-                f"预估价格区间(RMB): {format_rmb_range(min_cost, max_cost)}\n"
-                f"Token 公式估算(USD): ${token_cost:.4f}\n"
-                f"Token 公式估算(RMB): {format_rmb_value(token_cost)}"
-            )
+            lines = [
+                f"模型: {model}",
+                f"显示名称: OpenAI GPT Image 2",
+                f"模式: {'编辑' if is_edit_mode else '生成'}",
+                f"状态: 成功",
+                f"耗时: {duration:.2f} 秒",
+                f"图片数量: {len(image_tensors)}",
+                f"尺寸预设: {size}",
+                f"实际尺寸: {size_note}",
+                f"质量: {quality}",
+                f"背景: {background}",
+            ]
+
+            if exact_cost is not None:
+                lines.extend([
+                    f"实际价格(USD): ${exact_cost['usd']:.4f}",
+                    f"实际价格(RMB): {format_rmb_value(exact_cost['usd'])}",
+                    f"实际价格(Credits): {format_credits_value(exact_cost['usd'])}",
+                    f"图像输入 Tokens: {exact_cost['image_tokens']}",
+                    f"文本输入 Tokens: {exact_cost['text_tokens']}",
+                    f"输出 Tokens: {exact_cost['output_tokens']}",
+                ])
+            else:
+                lines.extend([
+                    f"预估价格区间(USD): ~${min_cost:.3f}-${max_cost:.3f}",
+                    f"预估价格区间(RMB): {format_rmb_range(min_cost, max_cost)}",
+                    f"Token 公式估算(USD): ${token_cost:.4f}",
+                    f"Token 公式估算(RMB): {format_rmb_value(token_cost)}",
+                ])
+
+            info_str = "\n".join(lines)
             return (final_image, info_str)
 
         except requests.exceptions.Timeout:
