@@ -31,7 +31,28 @@ pip install -r comfyui-PD_comfy-api-node/requirements.txt
 2. 登录并创建 API Key
 3. 复制 Key 并粘贴到节点中
 
+## 📝 更新日志
 
+### v2.0.0 -2026.0422
+- 更新chatgpt image2 节点
+- PD: Nano Banana 2 (ComfyUI Key) 节点更新，增加重试3次机制，放置出黑图，稳定性增加。
+### v2.0.0 -2026.0112
+- 新增 Auth Token 认证方式
+- 新增 GPT Image 节点
+- 优化成本计算
+- 改进错误处理
+
+### v1.0.0
+- 初始版本
+- 支持 Gemini 图像生成
+- 支持 API Key 认证
+
+### 节点介绍
+#### PD: GPT Image 2 (comfyui_apikey)
+- 支持输入多图参考
+- 支持单图输入，GPT image2 节点comfyui 格式。
+![[Pasted image 20260422192905.png]]
+![[Pasted image 20260422192828.png]]
 #### PD: Gemini Image (ComfyUI Key)
 ![alt text](image.png)
 
@@ -54,22 +75,10 @@ pip install -r comfyui-PD_comfy-api-node/requirements.txt
 
 ![Auth Token 节点示例](image/comfyui-node-auth.png)
 
+
 **优点**：
 - ✅ 无需申请 API Key
 - ✅ 使用现有账号权限
-
-## 📝 更新日志
-
-### v2.0.0 -2026.0112
-- 新增 Auth Token 认证方式
-- 新增 GPT Image 节点
-- 优化成本计算
-- 改进错误处理
-
-### v1.0.0
-- 初始版本
-- 支持 Gemini 图像生成
-- 支持 API Key 认证
 
 ## ⚠️ 注意事项
 

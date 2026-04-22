@@ -110,6 +110,68 @@ def build_openai_edit_files(image, mask=None):
     return files
 
 
+def append_gemini_input_files_to_openai_files(files, input_files):
+    if not input_files:
+        return files
+
+    image_index = sum(1 for field_name, _ in files if field_name in ("image", "image[]"))
+    for file_part in input_files:
+        if not isinstance(file_part, dict):
+            continue
+
+        inline_data = file_part.get("inlineData") or file_part.get("inline_data")
+        if not isinstance(inline_data, dict):
+            continue
+
+        mime_type = inline_data.get("mimeType") or inline_data.get("mime_type") or "image/png"
+        if not isinstance(mime_type, str) or not mime_type.startswith("image/"):
+            continue
+
+        data_b64 = inline_data.get("data")
+        if not data_b64:
+            continue
+
+        image_bytes = base64.b64decode(data_b64)
+        field_name = "image" if image_index == 0 and len(files) == 0 else "image[]"
+        extension = mime_type.split("/")[-1] or "png"
+        files.append((field_name, (f"image_{image_index}.{extension}", image_bytes, mime_type)))
+        image_index += 1
+
+    return files
+
+
+def build_openai_edit_files_from_sources(image=None, mask=None, input_files=None):
+    files = []
+
+    if image is not None:
+        files.extend(build_openai_edit_files(image, mask))
+    elif mask is not None:
+        raise ValueError("Mask editing requires an input image")
+
+    append_gemini_input_files_to_openai_files(files, input_files)
+
+    image_count = sum(1 for field_name, _ in files if field_name in ("image", "image[]"))
+    if image_count == 0:
+        raise ValueError("No valid images were provided")
+
+    if image_count > 1:
+        normalized_files = []
+        for field_name, file_value in files:
+            if field_name in ("image", "image[]"):
+                normalized_files.append(("image[]", file_value))
+            else:
+                normalized_files.append((field_name, file_value))
+        files = normalized_files
+
+    if mask is not None and image is None:
+        raise ValueError("Mask editing does not support files-only input")
+
+    if mask is not None and image_count != 1:
+        raise ValueError("Mask editing only supports a single input image")
+
+    return files
+
+
 def post_with_retries(url, headers, *, json_payload=None, data=None, files=None, timeout=300, retries=3, retry_delay=1.0):
     last_error = None
     for attempt in range(retries):
