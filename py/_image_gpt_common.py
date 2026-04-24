@@ -20,6 +20,19 @@ GPT_IMAGE_2_PRESET_SIZES = [
     "auto",
 ]
 
+SUPPORTED_OPENAI_IMAGE_MIME_TYPES = {
+    "image/jpeg": ("image/jpeg", "jpg"),
+    "image/jpg": ("image/jpeg", "jpg"),
+    "image/png": ("image/png", "png"),
+    "image/webp": ("image/webp", "webp"),
+    "geminimimetype.image_jpeg": ("image/jpeg", "jpg"),
+    "geminimimetype.image_png": ("image/png", "png"),
+    "geminimimetype.image_webp": ("image/webp", "webp"),
+    "image_jpeg": ("image/jpeg", "jpg"),
+    "image_png": ("image/png", "png"),
+    "image_webp": ("image/webp", "webp"),
+}
+
 # USD/CNY reference rate used for RMB estimation in node info output.
 # Based on the most recent publicly indexed April 2026 daily spot pages we could verify:
 # 2026-04-03: 1 USD ≈ 6.88154 CNY
@@ -110,6 +123,18 @@ def build_openai_edit_files(image, mask=None):
     return files
 
 
+def normalize_openai_image_mime_type(mime_type):
+    enum_value = getattr(mime_type, "value", mime_type)
+    if enum_value is None:
+        return ("image/png", "png")
+
+    mime_key = str(enum_value).strip().lower()
+    if not mime_key:
+        return ("image/png", "png")
+
+    return SUPPORTED_OPENAI_IMAGE_MIME_TYPES.get(mime_key, (None, None))
+
+
 def append_gemini_input_files_to_openai_files(files, input_files):
     if not input_files:
         return files
@@ -123,8 +148,10 @@ def append_gemini_input_files_to_openai_files(files, input_files):
         if not isinstance(inline_data, dict):
             continue
 
-        mime_type = inline_data.get("mimeType") or inline_data.get("mime_type") or "image/png"
-        if not isinstance(mime_type, str) or not mime_type.startswith("image/"):
+        mime_type, extension = normalize_openai_image_mime_type(
+            inline_data.get("mimeType") or inline_data.get("mime_type")
+        )
+        if not mime_type:
             continue
 
         data_b64 = inline_data.get("data")
@@ -133,7 +160,6 @@ def append_gemini_input_files_to_openai_files(files, input_files):
 
         image_bytes = base64.b64decode(data_b64)
         field_name = "image" if image_index == 0 and len(files) == 0 else "image[]"
-        extension = mime_type.split("/")[-1] or "png"
         files.append((field_name, (f"image_{image_index}.{extension}", image_bytes, mime_type)))
         image_index += 1
 

@@ -1,5 +1,5 @@
 import torch
-from comfy_api_nodes.apis import GeminiPart, GeminiInlineData, GeminiMimeType
+from comfy_api_nodes.apis import GeminiPart, GeminiInlineData
 from comfy_api_nodes.util.conversions import tensor_to_base64_string
 
 class PD_ComfyPlusImage:
@@ -56,7 +56,7 @@ class PD_ComfyPlusImage:
                         # 构造为 Gemini 认证的 Part
                         new_part = GeminiPart(
                             inlineData=GeminiInlineData(
-                                mimeType=GeminiMimeType.image_png,
+                                mimeType="image/png",
                                 data=img_b64
                             )
                         )
