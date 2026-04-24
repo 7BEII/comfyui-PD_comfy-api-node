@@ -33,6 +33,11 @@ pip install -r comfyui-PD_comfy-api-node/requirements.txt
 
 ## 📝 更新日志
 
+### v2.0.1 - 2026.0424
+- 修复 `PD_comfyplus_image (Multi-Size Pack)` -> GPT Image 2 `files` 输入不兼容的问题。
+- 在发送 OpenAI 兼容的 multipart 请求前，对打包图片的 MIME type 做归一化处理，确保 `GeminiMimeType.image_png` / `image_png` 会以 `image/png` 发送。
+- 仅影响 GPT Image 2 编辑模式的 `files` 输入路径；普通单图 `image` 输入路径行为保持不变。
+
 ### v2.0.0 -2026.0422
 - 更新chatgpt image2 节点
 - PD: Nano Banana 2 (ComfyUI Key) 节点更新，增加重试3次机制，放置出黑图，稳定性增加。
