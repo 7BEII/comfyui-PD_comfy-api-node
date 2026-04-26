@@ -275,7 +275,40 @@ def calculate_token_price_2(n):
     return cost * n
 
 
-def resolve_gpt_image_2_size(size, custom_width, custom_height):
+def _custom_size_enabled(use_custom_size):
+    if isinstance(use_custom_size, str):
+        return use_custom_size.strip().lower() in ("true", "1", "yes", "on")
+    return bool(use_custom_size)
+
+
+def resolve_gpt_image_2_size(
+    size,
+    custom_width,
+    custom_height,
+    size_input=None,
+    width_input=None,
+    height_input=None,
+    use_custom_size=True,
+):
+    if not _custom_size_enabled(use_custom_size):
+        return size
+
+    if size_input is not None:
+        size_input = str(size_input).strip()
+        if size_input:
+            return size_input
+
+    if width_input is not None and height_input is not None:
+        try:
+            width_input = int(width_input)
+            height_input = int(height_input)
+        except (TypeError, ValueError):
+            width_input = 0
+            height_input = 0
+
+        if width_input > 0 and height_input > 0:
+            return f"{width_input}x{height_input}"
+
     if custom_width > 0 and custom_height > 0:
         return f"{custom_width}x{custom_height}"
     return size
@@ -326,8 +359,24 @@ def calculate_exact_cost_gpt_image_2_from_usage(result):
     }
 
 
-def validate_gpt_image_2_size(size, custom_width=0, custom_height=0):
-    resolved_size = resolve_gpt_image_2_size(size, custom_width, custom_height)
+def validate_gpt_image_2_size(
+    size,
+    custom_width=0,
+    custom_height=0,
+    size_input=None,
+    width_input=None,
+    height_input=None,
+    use_custom_size=True,
+):
+    resolved_size = resolve_gpt_image_2_size(
+        size,
+        custom_width,
+        custom_height,
+        size_input=size_input,
+        width_input=width_input,
+        height_input=height_input,
+        use_custom_size=use_custom_size,
+    )
     if resolved_size == "auto":
         return resolved_size
 

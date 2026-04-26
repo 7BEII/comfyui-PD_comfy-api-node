@@ -61,6 +61,10 @@ class PDOpenAIGPTImage2APIKey:
                     "default": "1024x1024",
                     "tooltip": "Preset output size"
                 }),
+                "use_custom_size": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Enable custom_width/custom_height size override."
+                }),
                 "custom_width": ("INT", {
                     "default": 0,
                     "min": 0,
@@ -113,6 +117,7 @@ class PDOpenAIGPTImage2APIKey:
         quality,
         background,
         size,
+        use_custom_size,
         custom_width,
         custom_height,
         num_images,
@@ -127,7 +132,12 @@ class PDOpenAIGPTImage2APIKey:
             return (empty_image(), error_msg, "")
 
         try:
-            resolved_size = validate_gpt_image_2_size(size, custom_width, custom_height)
+            resolved_size = validate_gpt_image_2_size(
+                size,
+                custom_width,
+                custom_height,
+                use_custom_size=use_custom_size,
+            )
         except Exception as e:
             return (empty_image(), f"Error: {str(e)}", "")
 
@@ -191,7 +201,12 @@ class PDOpenAIGPTImage2APIKey:
             duration = time.time() - start_time
             min_cost, max_cost = estimate_price_range_2(quality, num_images)
             token_cost = calculate_token_price_2(num_images)
-            size_note = resolve_gpt_image_2_size(size, custom_width, custom_height)
+            size_note = resolve_gpt_image_2_size(
+                size,
+                custom_width,
+                custom_height,
+                use_custom_size=use_custom_size,
+            )
             exact_cost = calculate_exact_cost_gpt_image_2_from_usage(result)
 
             mode_label = "编辑" if is_edit_mode else "生成"
