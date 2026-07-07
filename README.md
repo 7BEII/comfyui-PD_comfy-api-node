@@ -1,5 +1,7 @@
 # ComfyUI PD Comfy API Node
 
+仓库定位：把官方 Comfy API 节点复刻成普通自定义节点，用户自己填 `comfy_api_key` 调用。
+
 ComfyUI 自定义节点套件，集成 Gemini 和 GPT 图像生成 API，支持两种认证方式。
 
 ## ✨ 功能特性
@@ -107,4 +109,3 @@ pip install -r comfyui-PD_comfy-api-node/requirements.txt
 ## 🤝 贡献
 欢迎提交 Issue 和 Pull Request！
 ---
-

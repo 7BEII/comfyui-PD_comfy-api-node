@@ -53,21 +53,21 @@ class PDOpenAIGPTImage2AuthToken:
                 }),
                 "size": (GPT_IMAGE_2_PRESET_SIZES, {
                     "default": "1024x1024",
-                    "tooltip": "Preset output size"
+                    "tooltip": "Preset output size, or Custom with custom_width/custom_height"
                 }),
                 "custom_width": ("INT", {
                     "default": 0,
                     "min": 0,
                     "max": 3840,
                     "step": 16,
-                    "tooltip": "Override width when both width and height are non-zero"
+                    "tooltip": "Custom width. Must be paired with custom_height."
                 }),
                 "custom_height": ("INT", {
                     "default": 0,
                     "min": 0,
                     "max": 3840,
                     "step": 16,
-                    "tooltip": "Override height when both width and height are non-zero"
+                    "tooltip": "Custom height. Must be paired with custom_width."
                 }),
                 "num_images": ("INT", {
                     "default": 1,

@@ -17,6 +17,7 @@ GPT_IMAGE_2_PRESET_SIZES = [
     "2048x1152",
     "3840x2160",
     "2160x3840",
+    "Custom",
     "auto",
 ]
 
@@ -123,7 +124,7 @@ def append_gemini_input_files_to_openai_files(files, input_files):
         if not isinstance(inline_data, dict):
             continue
 
-        mime_type = inline_data.get("mimeType") or inline_data.get("mime_type") or "image/png"
+        mime_type = normalize_mime_type(inline_data.get("mimeType") or inline_data.get("mime_type") or "image/png")
         if not isinstance(mime_type, str) or not mime_type.startswith("image/"):
             continue
 
@@ -138,6 +139,14 @@ def append_gemini_input_files_to_openai_files(files, input_files):
         image_index += 1
 
     return files
+
+
+def normalize_mime_type(mime_type):
+    if hasattr(mime_type, "value"):
+        return mime_type.value
+    if isinstance(mime_type, str) and "/" not in mime_type and "." in mime_type:
+        return mime_type.rsplit(".", 1)[-1].replace("_", "/")
+    return mime_type
 
 
 def build_openai_edit_files_from_sources(image=None, mask=None, input_files=None):
@@ -250,7 +259,11 @@ def calculate_token_price_2(n):
 
 
 def resolve_gpt_image_2_size(size, custom_width, custom_height):
-    if custom_width > 0 and custom_height > 0:
+    custom_requested = str(size).lower() == "custom"
+    has_custom_value = custom_width > 0 or custom_height > 0
+    if custom_requested or has_custom_value:
+        if custom_width <= 0 or custom_height <= 0:
+            raise ValueError("Custom size requires both custom_width and custom_height to be greater than 0")
         return f"{custom_width}x{custom_height}"
     return size
 

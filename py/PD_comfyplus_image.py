@@ -56,12 +56,12 @@ class PD_ComfyPlusImage:
                         # 构造为 Gemini 认证的 Part
                         new_part = GeminiPart(
                             inlineData=GeminiInlineData(
-                                mimeType=GeminiMimeType.image_png,
+                                mimeType=GeminiMimeType.image_png.value,
                                 data=img_b64
                             )
                         )
                         # 转成字典防止 Pydantic 跨模块传递对象时校验失败
-                        files_list.append(new_part.model_dump(exclude_none=True))
+                        files_list.append(new_part.model_dump(mode="json", exclude_none=True))
                     except Exception as e:
                         print(f"[Error] PD_comfyplus_image pack failed for an image: {e}")
         
