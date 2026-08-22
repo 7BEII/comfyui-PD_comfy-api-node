@@ -1,0 +1,2 @@
+alibabacloud_credentials>=1.0.11
+alibabacloud_facebody20191230>=6.0.0
