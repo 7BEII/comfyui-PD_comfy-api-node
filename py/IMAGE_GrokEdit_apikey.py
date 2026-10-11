@@ -79,6 +79,7 @@ def send_status(node_id, text):
 
 
 def request_with_interrupt(session, method, url, node_id, status, start_time, **kwargs):
+    mm.throw_exception_if_processing_interrupted()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
     future = executor.submit(method, url, **kwargs)
     last_elapsed = -1
@@ -260,6 +261,7 @@ class PDGrokImageEditAPIKey:
                 timeout=600,
             )
             if response.status_code != 200:
+                send_status(unique_id, f"Failed\nTime elapsed: {int(time.monotonic() - start_time)}s")
                 return (empty_image(), f"API Error {response.status_code}: {response.text[:500]}")
 
             result = response.json()
@@ -281,6 +283,7 @@ class PDGrokImageEditAPIKey:
                     output_images.append(load_image_to_tensor(base64.b64decode(item["b64_json"])))
 
             if not output_images:
+                send_status(unique_id, f"Failed\nTime elapsed: {int(time.monotonic() - start_time)}s")
                 return (empty_image(), f"Error: response contained no images: {str(result)[:500]}")
 
             image = torch.cat(output_images, dim=0)
@@ -289,6 +292,8 @@ class PDGrokImageEditAPIKey:
             send_status(unique_id, f"Completed\nTime elapsed: {int(elapsed)}s")
             print(f"[PD_GROK_EDIT] Completed {len(output_images)} image(s) in {elapsed:.2f}s")
             return (image, price)
+        except mm.InterruptProcessingException:
+            raise
         except requests.exceptions.Timeout:
             send_status(unique_id, f"Timed out\nTime elapsed: {int(time.monotonic() - start_time)}s")
             return (empty_image(), "Error: request timeout (600s)")
@@ -307,5 +312,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PDGrokImageEditAPIKey": "grok edit (comfyapikey)",
+    "PDGrokImageEditAPIKey": "PD-grok-image-edit",
 }

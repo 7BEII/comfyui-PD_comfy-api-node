@@ -35,6 +35,25 @@ pip install -r comfyui-PD_comfy-api-node/requirements.txt
 
 ## 📝 更新日志
 
+### 2026-10-11 - Grok 文生图
+- 新增 `PDGrokImageAPIKey` 文生图节点，复用现有 Grok 模型列表；API Key 由节点输入提供。同步更新 Grok 编辑节点的取消检查与失败状态。
+
+### 2026-10-11 - OpenAI ChatGPT / GPT Image 2.5
+- 新增 `PD: OpenAI ChatGPT Latest (ComfyUI Key)`（`PDOpenAIChatLatestAPIKey`），在 `PD_Tools/Text_Generation`。模型列表复用本地官方节点的 18 个选项，支持批量图片、`OPENAI_INPUT_FILES` 文件输入及 `OPENAI_CHAT_CONFIG` 高级设置；可连接官方 OpenAI ChatGPT Input Files / Advanced Options 节点。输出文字。
+- 新增 `PD: OpenAI GPT Image 2.5 (ComfyUI Key)`（`PDOpenAIGPTImage25APIKey`），在 `PD_Tools/Image_Generation`。支持 `gpt-image-2.5-flare` / `gpt-image-2.5-sunburst` / `gpt-image-2` / `gpt-image-1.5` / `gpt-image-1`；动态尺寸、质量、背景、最多 16 张参考图、单图遮罩和 1–8 张输出。保留 RGBA 透明度，自动对齐同批输出尺寸。seed 沿用官方控件，当前后端未实现。
+- 两者手动填写 Comfy.org API Key，复用本地官方价格估算角标；完成状态显示服务返回的 usage，估算角标不代表实际扣费。旧 ChatGPT/GPT Image 节点保留，需包含上述官方模型节点的新版 ComfyUI。
+- ChatGPT 每次独立请求；官方 `persist_context` 已废弃且无效，因此新节点省略该开关，不在本地保存历史。Responses 格式参考 [OpenAI Docs](https://developers.openai.com/api/docs/guides/conversation-state)，Comfy.org 代理契约以本地 `comfy_api_nodes/nodes_openai.py` 为准。
+- 请求/轮询/下载期间每秒显示耗时，每 0.1 秒检查取消，整次执行限时 600 秒；仅一次生成 POST，不自动重试。取消不保证退还远端已产生的费用。
+- 离线测试：`python custom_nodes/comfyui-PD_comfy-api-node/tests/test_openai_latest.py`。覆盖全部模型、文件/高级设置、异步轮询、RGBA/尺寸对齐、遮罩、慢请求取消、超时不重试及请求前校验；本次未提交真实付费请求。
+
+### 2026-10-11 - Nano Banana 2.1
+- 新增 `PD: Nano Banana 2.1 (ComfyUI Key)`（`PDGeminiNanoBanana21`），位于 `PD_Tools/Image_Generation`；旧 Nano Banana 2 节点保留。
+- 复用当前官方节点的动态模型参数：Nano Banana 2.1、Nano Banana 2、Nano Banana 2 Lite；Lite 仅支持 1K，2.1 支持 MINIMAL/MEDIUM/HIGH。支持最多 14 张参考图及 `GEMINI_INPUT_FILES`，输出成品图、文字、第一张思考图；无思考图时与官方节点一样输出空白占位图。
+- 手动填写 Comfy.org API Key；无需通过官方节点的登录入口。需包含 `GeminiNanoBanana2V2` 的新版 ComfyUI，本机已验证版本为 0.39.0。费用角标沿用官方估算，实际扣费以账户账单为准。
+- 按官方请求契约，2.1 不发送 temperature/top_p；所有三个模型当前都不发送 seed。控件提示已注明，固定 seed 不保证复现。
+- 等待期间每秒显示耗时，取消检查间隔 0.1 秒；单次执行只提交一次生成请求，不自动重试。取消后不继续轮询、下载或返回部分结果；已受理的远端请求不保证取消扣费。
+- 离线模拟验证：`python custom_nodes/comfyui-PD_comfy-api-node/tests/test_nano_banana21.py`，覆盖三个模型请求、思考图分离、慢生成/下载取消、超时不重试及请求前校验；不产生 API 费用。
+
 ### v2.0.1 - 2026.0424
 - 修复 `PD_comfyplus_image (Multi-Size Pack)` -> GPT Image 2 `files` 输入不兼容的问题。
 - 在发送 OpenAI 兼容的 multipart 请求前，对打包图片的 MIME type 做归一化处理，确保 `GeminiMimeType.image_png` / `image_png` 会以 `image/png` 发送。
