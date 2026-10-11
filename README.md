@@ -35,6 +35,13 @@ pip install -r comfyui-PD_comfy-api-node/requirements.txt
 
 ## 📝 更新日志
 
+### 2026-10-11 - Grok Video
+- 新增 `PD- grok video comfyapi`（`PDGrokVideoAPIKey`），位于 `PD_Tools/Video_Generation`，手动填写 Comfy.org API Key。
+- 支持 `grok-imagine-video` / `grok-imagine-video-1.5` / `grok-imagine-video-1.5-lite`，文生视频或单张起始图生视频，1–15 秒；参数与当前官方 Grok Video 节点一致。普通版不支持 1080p，1.5 系列有起始图时可省略提示词，seed 不保证输出复现。
+- 输出 `VIDEO` 可直接连接 Save Video，`info` 包含任务 ID、模型、服务返回的 usage，以及响应提供的实际 credits。费用角标明确标为估算。
+- 一次执行只提交一次生成请求；轮询、下载期间每秒显示耗时，每 0.1 秒检查取消，整次执行限时 600 秒，不自动重试付费请求。取消不保证退还已受理任务费用。
+- 验证：`python custom_nodes/comfyui-PD_comfy-api-node/tests/test_grok_video.py`。离线覆盖三个模型文/图生视频、MP4 输出可解码、任务/费用信息、提交/轮询/下载取消、超时不重试及请求前校验。本次没有真实付费生成。
+
 ### 2026-10-11 - Grok 文生图
 - 新增 `PDGrokImageAPIKey` 文生图节点，复用现有 Grok 模型列表；API Key 由节点输入提供。同步更新 Grok 编辑节点的取消检查与失败状态。
 
